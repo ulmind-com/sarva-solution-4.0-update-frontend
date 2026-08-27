@@ -13,6 +13,11 @@ import MemberIdModal from '@/components/MemberIdModal';
 import api from '@/lib/api';
 import { sendOtp, verifyOtp } from '@/services/otpService';
 
+// Phone OTP verification. Mirrors the backend OTP_VERIFICATION_REQUIRED flag —
+// set VITE_OTP_VERIFICATION_REQUIRED=false to skip it (e.g. while the client is
+// testing, so no SMS is sent). Both flags default to on.
+const OTP_VERIFICATION_REQUIRED = import.meta.env.VITE_OTP_VERIFICATION_REQUIRED !== 'false';
+
 const Register = () => {
   const { referralId } = useParams<{ referralId: string }>();
   const [formData, setFormData] = useState({
@@ -158,7 +163,7 @@ const Register = () => {
       toast.error('Please enter a valid phone number');
       return false;
     }
-    if (!phoneVerified || verifiedPhone !== formData.phone.trim()) {
+    if (OTP_VERIFICATION_REQUIRED && (!phoneVerified || verifiedPhone !== formData.phone.trim())) {
       toast.error('Please verify your phone number via OTP');
       return false;
     }
@@ -344,9 +349,9 @@ const Register = () => {
                       onChange={handleChange}
                       required
                       className="bg-card border-input flex-1"
-                      disabled={isLoading || phoneVerified}
+                      disabled={isLoading || (OTP_VERIFICATION_REQUIRED && phoneVerified)}
                     />
-                    {phoneVerified ? (
+                    {OTP_VERIFICATION_REQUIRED && (phoneVerified ? (
                       <span className="flex items-center gap-1 px-3 text-sm font-medium text-green-600 whitespace-nowrap">
                         <CheckCircle className="h-4 w-4" /> Verified
                       </span>
@@ -368,10 +373,10 @@ const Register = () => {
                           'Send OTP'
                         )}
                       </Button>
-                    )}
+                    ))}
                   </div>
 
-                  {otpSent && !phoneVerified && (
+                  {OTP_VERIFICATION_REQUIRED && otpSent && !phoneVerified && (
                     <div className="flex gap-2 pt-1">
                       <Input
                         type="text"
