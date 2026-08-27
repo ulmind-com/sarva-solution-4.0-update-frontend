@@ -12,6 +12,10 @@ import { toast } from 'sonner';
 import { getMemberByCode, processFranchiseSale, getFranchiseInventory } from '@/services/franchiseService';
 import { useFranchiseAuthStore } from '@/stores/useFranchiseAuthStore';
 
+// Activation PV is counted in fixed 0.5 steps (mirrors backend src/utils/pv.util.js)
+const PV_STEP = 0.5;
+const MIN_ACTIVATION_PV = 0.5;
+
 interface VerifiedMember {
   _id: string;
   memberId: string;
@@ -78,6 +82,8 @@ const FranchiseCreateBill = () => {
     grandTotal?: number;
     totalBV?: number;
     totalPV?: number;
+    effectivePV?: number;
+    flushedPV?: number;
     userActivated?: boolean;
     isFirstPurchase?: boolean;
     emailSent?: boolean;
@@ -212,7 +218,13 @@ const FranchiseCreateBill = () => {
   const totalBV = cart.reduce((sum, item) => sum + (item.bv * item.quantity), 0);
   const totalPV = cart.reduce((sum, item) => sum + (item.pv * item.quantity), 0);
 
+  // PV counts in fixed 0.5 steps. Only whole steps reach the binary legs; the
+  // remainder is flushed out (e.g. 0.6 PV -> 0.5 counts, 0.1 flushed).
+  const effectivePV = totalPV > 0 ? Math.floor(totalPV / PV_STEP + 1e-9) * PV_STEP : 0;
+  const flushedPV = parseFloat((totalPV - effectivePV).toFixed(4));
+
   const isFirstPurchase = verifiedMember ? !verifiedMember.isFirstPurchaseDone : false;
+  const belowMinPV = isFirstPurchase && totalPV < MIN_ACTIVATION_PV;
 
   // ===== Generate Bill =====
   const handleGenerateBill = async () => {
@@ -244,6 +256,8 @@ const FranchiseCreateBill = () => {
         grandTotal: data.grandTotal,
         totalBV: data.totalBV,
         totalPV: data.totalPV,
+        effectivePV: data.effectivePV,
+        flushedPV: data.flushedPV,
         userActivated: data.userActivated,
         isFirstPurchase: data.isFirstPurchase,
         emailSent: data.emailSent,
@@ -534,10 +548,19 @@ const FranchiseCreateBill = () => {
                     </div>
 
                     {/* PV Warning */}
-                    {cart.length > 0 && isFirstPurchase && totalPV < 1 && (
+                    {cart.length > 0 && belowMinPV && (
                       <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-lg text-center">
                         <p className="text-sm text-destructive font-medium">
-                          ⚠️ Order must have at least 1 PV to proceed.
+                          ⚠️ Order must have at least {MIN_ACTIVATION_PV} PV to proceed.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Partial PV step notice */}
+                    {cart.length > 0 && isFirstPurchase && !belowMinPV && flushedPV > 0 && (
+                      <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-center">
+                        <p className="text-sm text-amber-700 dark:text-amber-500 font-medium">
+                          Only {effectivePV} PV will count towards matching. {flushedPV} PV will be flushed out (PV counts in {PV_STEP} steps).
                         </p>
                       </div>
                     )}
@@ -548,12 +571,12 @@ const FranchiseCreateBill = () => {
                       className="w-full"
                       size="lg"
                       onClick={handleGenerateBill}
-                      disabled={isProcessing || !verifiedMember || cart.length === 0 || (isFirstPurchase && totalPV < 1)}
+                      disabled={isProcessing || !verifiedMember || cart.length === 0 || belowMinPV}
                     >
                       {isProcessing 
                         ? 'Processing...' 
-                        : isFirstPurchase && totalPV < 1 && cart.length > 0 
-                          ? 'Minimum 1 PV Required' 
+                        : belowMinPV && cart.length > 0 
+                          ? `Minimum ${MIN_ACTIVATION_PV} PV Required` 
                           : 'Generate Bill'}
                     </Button>
                   </div>
@@ -599,6 +622,11 @@ const FranchiseCreateBill = () => {
             <div className="p-3 bg-muted rounded-lg text-center">
               <p className="text-xs text-muted-foreground">Total PV</p>
               <p className="font-bold text-lg">{saleResult?.totalPV ?? totalPV}</p>
+              {(saleResult?.flushedPV ?? 0) > 0 && (
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  {saleResult?.effectivePV} counted · {saleResult?.flushedPV} flushed
+                </p>
+              )}
             </div>
           </div>
 
