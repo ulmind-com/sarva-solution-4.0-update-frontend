@@ -463,7 +463,7 @@ const Register = () => {
                   </Label>
                 </div>
 
-                {phoneVerified ? (
+                {(!OTP_VERIFICATION_REQUIRED || phoneVerified) ? (
                   <Button
                     type="submit"
                     className="w-full"
