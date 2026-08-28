@@ -41,6 +41,9 @@ export interface TreeNodeData {
   // Business Volume
   leftLegBV?: number;
   rightLegBV?: number;
+  // Point Value on each leg (already floored to a 0.5 step by the backend)
+  leftLegPV?: number;
+  rightLegPV?: number;
   thisMonthLeftLegBV?: number;
   thisMonthRightLegBV?: number;
   halfYearlyLeftLegBV?: number;

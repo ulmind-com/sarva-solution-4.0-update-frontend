@@ -66,6 +66,8 @@ export const transformToD3Format = (node: TreeNodeData | null, position: 'root' 
             // Business Volume
             leftLegBV: node.leftLegBV ?? 0,
             rightLegBV: node.rightLegBV ?? 0,
+            leftLegPV: node.leftLegPV ?? 0,
+            rightLegPV: node.rightLegPV ?? 0,
             thisMonthLeftLegBV: node.thisMonthLeftLegBV ?? 0,
             thisMonthRightLegBV: node.thisMonthRightLegBV ?? 0,
             // BV & Stars from Backend if provided, but calculate stars from tree if backend sends 0

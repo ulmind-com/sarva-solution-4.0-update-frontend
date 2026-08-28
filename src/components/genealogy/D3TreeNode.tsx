@@ -6,6 +6,9 @@ import { cn } from '@/lib/utils';
 import type { TreeNodeData } from './TreeNode';
 
 // D3 Tree Node Datum format
+// Legs earn in 0.5 units, so show 0.5 / 1 / 1.5 rather than a long float.
+const formatPV = (pv?: number) => (pv ?? 0).toFixed(1).replace(/\.0$/, '');
+
 export interface D3TreeNodeDatum {
   name: string;
   attributes: {
@@ -35,6 +38,9 @@ export interface D3TreeNodeDatum {
     // Business Volume
     leftLegBV?: number;
     rightLegBV?: number;
+    // Point Value on each leg (backend floors it to a 0.5 step)
+    leftLegPV?: number;
+    rightLegPV?: number;
     thisMonthLeftLegBV?: number;
     thisMonthRightLegBV?: number;
     // Stars
@@ -287,7 +293,7 @@ const HoverTooltip = ({
             <div className="p-2 bg-background/60 rounded-lg border border-border/30 space-y-2">
               {/* Header with Total Team Count */}
               <div className="flex justify-between items-center">
-                <p className="text-[10px] font-medium text-muted-foreground">Left Side PV</p>
+                <p className="text-[10px] font-medium text-muted-foreground">Left Side Man</p>
                 <span className="text-[10px] font-bold text-primary flex items-center gap-1 bg-primary/10 px-1.5 py-0.5 rounded">
                   <Users className="w-3 h-3" /> {data.leftTeamCount ?? 0}
                 </span>
@@ -304,13 +310,19 @@ const HoverTooltip = ({
                   <span className="text-xs font-bold text-destructive">{data.leftCompleteInactive ?? 0}</span>
                 </div>
               </div>
+
+              {/* Row 2: Leg PV */}
+              <div className="flex justify-center items-baseline gap-1">
+                <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-wide">PV</span>
+                <span className="text-xs font-bold text-foreground">{formatPV(data.leftLegPV)}</span>
+              </div>
             </div>
 
             {/* Right Leg Stats */}
             <div className="p-2 bg-background/60 rounded-lg border border-border/30 space-y-2">
               {/* Header with Total Team Count */}
               <div className="flex justify-between items-center">
-                <p className="text-[10px] font-medium text-muted-foreground">Right Side PV</p>
+                <p className="text-[10px] font-medium text-muted-foreground">Right Side Man</p>
                 <span className="text-[10px] font-bold text-primary flex items-center gap-1 bg-primary/10 px-1.5 py-0.5 rounded">
                   <Users className="w-3 h-3" /> {data.rightTeamCount ?? 0}
                 </span>
@@ -326,6 +338,12 @@ const HoverTooltip = ({
                   <XCircle className="h-3 w-3 text-destructive" />
                   <span className="text-xs font-bold text-destructive">{data.rightCompleteInactive ?? 0}</span>
                 </div>
+              </div>
+
+              {/* Row 2: Leg PV */}
+              <div className="flex justify-center items-baseline gap-1">
+                <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-wide">PV</span>
+                <span className="text-xs font-bold text-foreground">{formatPV(data.rightLegPV)}</span>
               </div>
             </div>
           </div>
