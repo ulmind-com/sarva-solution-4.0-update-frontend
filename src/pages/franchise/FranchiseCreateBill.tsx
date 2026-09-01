@@ -12,9 +12,11 @@ import { toast } from 'sonner';
 import { getMemberByCode, processFranchiseSale, getFranchiseInventory } from '@/services/franchiseService';
 import { useFranchiseAuthStore } from '@/stores/useFranchiseAuthStore';
 
-// Activation PV is counted in fixed 0.5 steps (mirrors backend src/utils/pv.util.js)
+// Activation PV counts in fixed 0.5 steps and is capped at 1
+// (mirrors backend src/utils/pv.util.js)
 const PV_STEP = 0.5;
 const MIN_ACTIVATION_PV = 0.5;
+const MAX_ACTIVATION_PV = 1;
 
 interface VerifiedMember {
   _id: string;
@@ -218,9 +220,13 @@ const FranchiseCreateBill = () => {
   const totalBV = cart.reduce((sum, item) => sum + (item.bv * item.quantity), 0);
   const totalPV = cart.reduce((sum, item) => sum + (item.pv * item.quantity), 0);
 
-  // PV counts in fixed 0.5 steps. Only whole steps reach the binary legs; the
-  // remainder is flushed out (e.g. 0.6 PV -> 0.5 counts, 0.1 flushed).
-  const effectivePV = totalPV > 0 ? Math.floor(totalPV / PV_STEP + 1e-9) * PV_STEP : 0;
+  // PV counts in fixed 0.5 steps and is capped at 1. Only the counted part reaches
+  // the binary legs and the franchise commission; the rest is flushed out
+  // (e.g. 0.6 PV -> 0.5 counts, 0.1 flushed;  3 PV -> 1 counts, 2 flushed).
+  const effectivePV =
+    totalPV <= 0 ? 0
+    : totalPV >= MAX_ACTIVATION_PV ? MAX_ACTIVATION_PV
+    : Math.floor(totalPV / PV_STEP + 1e-9) * PV_STEP;
   const flushedPV = parseFloat((totalPV - effectivePV).toFixed(4));
 
   const isFirstPurchase = verifiedMember ? !verifiedMember.isFirstPurchaseDone : false;
@@ -560,7 +566,7 @@ const FranchiseCreateBill = () => {
                     {cart.length > 0 && isFirstPurchase && !belowMinPV && flushedPV > 0 && (
                       <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-center">
                         <p className="text-sm text-amber-700 dark:text-amber-500 font-medium">
-                          Only {effectivePV} PV will count towards matching. {flushedPV} PV will be flushed out (PV counts in {PV_STEP} steps).
+                          Only {effectivePV} PV will count towards matching. {flushedPV} PV will be flushed out (PV counts in {PV_STEP} steps, capped at {MAX_ACTIVATION_PV}).
                         </p>
                       </div>
                     )}
