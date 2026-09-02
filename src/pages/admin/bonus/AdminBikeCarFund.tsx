@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
+import BonusQualifiersDialog from "@/components/admin/BonusQualifiersDialog";
+import type { BonusPeriodQuery } from "@/services/bonusQualifiersService";
 import {
     getBikeCarFundLivePool,
     getBikeCarFundPools,
@@ -34,6 +36,8 @@ import {
 
 export default function AdminBikeCarFund() {
     const [loadingUsers, setLoadingUsers] = useState(true);
+    // Qualifier list for a clicked pool row (isolated, read-only)
+    const [qualifiersPeriod, setQualifiersPeriod] = useState<BonusPeriodQuery | null>(null);
     const [loadingPools, setLoadingPools] = useState(true);
     const [triggering, setTriggering] = useState(false);
     const [applying, setApplying] = useState(false);
@@ -365,7 +369,17 @@ export default function AdminBikeCarFund() {
                                                     <TableCell className="font-bold text-indigo-600">₹{(p.poolAmount || 0).toLocaleString('en-IN')}</TableCell>
                                                     <TableCell>{p.totalUnits}</TableCell>
                                                     <TableCell className="font-bold text-green-600">₹{(p.perUnitValue || 0).toFixed(2)}</TableCell>
-                                                    <TableCell>{p.eligibleUserCount}</TableCell>
+                                                    <TableCell>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setQualifiersPeriod({ year: p.year, month: p.month })}
+                                                            className="font-semibold text-primary underline-offset-2 hover:underline disabled:cursor-default disabled:text-foreground disabled:no-underline"
+                                                            disabled={!p.eligibleUserCount}
+                                                            title="View the members credited from this pool"
+                                                        >
+                                                            {p.eligibleUserCount}
+                                                        </button>
+                                                    </TableCell>
                                                     <TableCell>
                                                         <Badge variant={p.status === 'distributed' ? 'default' : 'secondary'} className={p.status === 'distributed' ? 'bg-green-500' : 'bg-orange-500'}>
                                                             {p.status ? p.status.toUpperCase() : 'PENDING'}
@@ -399,6 +413,12 @@ export default function AdminBikeCarFund() {
                     </Card>
                 </TabsContent>
             </Tabs>
+            <BonusQualifiersDialog
+                open={!!qualifiersPeriod}
+                onOpenChange={(o) => { if (!o) setQualifiersPeriod(null); }}
+                bonusType="bike-car-fund"
+                period={qualifiersPeriod}
+            />
         </div>
     );
 }
