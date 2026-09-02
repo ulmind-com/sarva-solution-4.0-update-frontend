@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { RefreshCw, Zap, CheckCircle2, Crown, BadgeCheck } from "lucide-react";
+import { RefreshCw, Zap, CheckCircle2, Crown, BadgeCheck, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -382,15 +382,21 @@ export default function AdminSsvplSuperBonus() {
                                                     <TableCell>{p.totalUnits}</TableCell>
                                                     <TableCell className="font-bold text-green-600">₹{(p.perUnitValue || 0).toFixed(2)}</TableCell>
                                                     <TableCell>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => setQualifiersPeriod({ cycleYear: p.cycleYear || p.year })}
-                                                            className="font-semibold text-primary underline-offset-2 hover:underline disabled:cursor-default disabled:text-foreground disabled:no-underline"
-                                                            disabled={!p.eligibleUserCount}
-                                                            title="View the members credited from this pool"
-                                                        >
-                                                            {p.eligibleUserCount}
-                                                        </button>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="font-semibold">{p.eligibleUserCount}</span>
+                                                            {!!p.eligibleUserCount && (
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    className="h-7 gap-1 px-2 text-xs"
+                                                                    onClick={() => setQualifiersPeriod({ cycleYear: p.cycleYear || p.year })}
+                                                                >
+                                                                    <Users className="h-3.5 w-3.5" />
+                                                                    View List
+                                                                </Button>
+                                                            )}
+                                                        </div>
                                                     </TableCell>
                                                     <TableCell>
                                                         <Badge variant={p.status === 'distributed' ? 'default' : 'secondary'} className={p.status === 'distributed' ? 'bg-green-500' : 'bg-orange-500'}>
