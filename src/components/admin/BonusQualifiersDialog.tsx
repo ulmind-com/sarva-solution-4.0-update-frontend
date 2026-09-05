@@ -90,7 +90,7 @@ const BonusQualifiersDialog = ({ open, onOpenChange, bonusType, period }: Props)
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-6xl max-h-[88vh] flex flex-col">
+            <DialogContent className="max-w-6xl max-h-[92vh] sm:max-h-[88vh] flex flex-col p-4 sm:p-6">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <Users className="h-5 w-5 text-primary" />
@@ -128,19 +128,19 @@ const BonusQualifiersDialog = ({ open, onOpenChange, bonusType, period }: Props)
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                             <div className="rounded-lg bg-muted/40 p-3">
                                 <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Pool Amount</p>
-                                <p className="text-lg font-bold text-primary">{money(data.pool.poolAmount)}</p>
+                                <p className="text-base font-bold text-primary sm:text-lg">{money(data.pool.poolAmount)}</p>
                             </div>
                             <div className="rounded-lg bg-muted/40 p-3">
                                 <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Total Units</p>
-                                <p className="text-lg font-bold">{data.pool.totalUnits}</p>
+                                <p className="text-base font-bold sm:text-lg">{data.pool.totalUnits}</p>
                             </div>
                             <div className="rounded-lg bg-muted/40 p-3">
                                 <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Per Unit</p>
-                                <p className="text-lg font-bold text-green-600">{money(data.pool.perUnitValue)}</p>
+                                <p className="text-base font-bold text-green-600 sm:text-lg">{money(data.pool.perUnitValue)}</p>
                             </div>
                             <div className="rounded-lg bg-muted/40 p-3">
                                 <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Qualifiers</p>
-                                <p className="text-lg font-bold">{data.totals.qualifierCount}</p>
+                                <p className="text-base font-bold sm:text-lg">{data.totals.qualifierCount}</p>
                             </div>
                         </div>
 
@@ -171,7 +171,37 @@ const BonusQualifiersDialog = ({ open, onOpenChange, bonusType, period }: Props)
                             </Button>
                         </div>
 
-                        <div className="min-h-0 flex-1 overflow-auto rounded-lg border">
+                        {/* Phones: one card per member — a 7-column table is unreadable at 375px */}
+                        <div className="min-h-0 flex-1 space-y-2 overflow-auto sm:hidden">
+                            {rows.length > 0 ? rows.map((q) => (
+                                <div key={q.userId} className="rounded-lg border p-3">
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="min-w-0">
+                                            <p className="truncate text-sm font-medium">{q.fullName || '—'}</p>
+                                            <p className="font-mono text-[11px] text-muted-foreground">{q.memberId || '—'}</p>
+                                        </div>
+                                        <div className="shrink-0 text-right">
+                                            <p className="text-sm font-bold text-green-600">{money(q.netCredit)}</p>
+                                            <p className="text-[11px] text-muted-foreground">net credit</p>
+                                        </div>
+                                    </div>
+                                    <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 border-t pt-2 text-[11px] text-muted-foreground">
+                                        <span>Units <b className="text-foreground">{q.finalUnits}</b></span>
+                                        <span>Gross <b className="text-foreground">{money(q.grossCredit)}</b></span>
+                                        <span>Admin <b className="text-destructive">-{money(q.adminCharge)}</b></span>
+                                        <span>TDS <b className="text-destructive">-{money(q.tds)}</b></span>
+                                    </div>
+                                </div>
+                            )) : (
+                                <p className="py-10 text-center text-sm text-muted-foreground">
+                                    {data.totals.qualifierCount === 0
+                                        ? 'This pool has not been distributed, so no member has been credited yet.'
+                                        : 'No member matches that search.'}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="hidden min-h-0 flex-1 overflow-auto rounded-lg border sm:block">
                             <Table>
                                 <TableHeader className="sticky top-0 z-10 bg-muted">
                                     <TableRow>
@@ -208,11 +238,11 @@ const BonusQualifiersDialog = ({ open, onOpenChange, bonusType, period }: Props)
                             </Table>
                         </div>
 
-                        <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3 text-xs text-muted-foreground">
+                        <div className="flex flex-col gap-2 border-t pt-3 text-xs text-muted-foreground sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                             <span>
                                 Showing <b>{rows.length}</b> of <b>{data.totals.qualifierCount}</b> qualifiers
                             </span>
-                            <span className="flex items-center gap-3">
+                            <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
                                 <span>Total gross <b className="text-foreground">{money(data.totals.totalGross)}</b></span>
                                 <span>Total net <b className="text-green-600">{money(data.totals.totalNet)}</b></span>
                                 <Badge variant="secondary" className="uppercase">{data.pool.status}</Badge>

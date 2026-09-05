@@ -138,7 +138,7 @@ const GallerySection = () => {
                 </div>
                 <button 
                   onClick={() => setSelectedImage(null)}
-                  className="absolute -top-4 -right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-red-600 text-white shadow-xl hover:bg-red-700 hover:scale-110 ring-4 ring-white transition-all duration-300"
+                  className="absolute top-2 right-2 sm:-top-4 sm:-right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-red-600 text-white shadow-xl hover:bg-red-700 hover:scale-110 ring-4 ring-white transition-all duration-300"
                 >
                   <X className="h-5 w-5 font-bold" />
                   <span className="sr-only">Close</span>

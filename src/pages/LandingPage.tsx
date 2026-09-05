@@ -32,7 +32,9 @@ import {
   Leaf,
   MapPin,
   Building2,
-  Download
+  Download,
+  Menu,
+  X
 } from 'lucide-react';
 
 const fadeInUp = {
@@ -72,6 +74,8 @@ const whyChooseUs = [
 
 const LandingPage = () => {
   const [isScrolled, setIsScrolled] = useState(false);
+  // Mobile nav — below md the links have no other way to be reached
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -82,8 +86,18 @@ const LandingPage = () => {
   }, []);
 
   const scrollToSection = (id: string) => {
+    setMobileNavOpen(false);
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  const NAV_LINKS: { id: string; label: string }[] = [
+    { id: 'home', label: 'Home' },
+    { id: 'about-future', label: 'About' },
+    { id: 'segments', label: 'Segments' },
+    { id: 'gallery', label: 'Gallery' },
+    { id: 'banking', label: 'Bank Details' },
+    { id: 'contact', label: 'Contact' },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -101,7 +115,7 @@ const LandingPage = () => {
             ? 'container max-w-5xl rounded-full bg-background/95 backdrop-blur-xl shadow-lg border border-border/50 px-6 py-2' 
             : 'container max-w-7xl rounded-full bg-black/20 dark:bg-black/40 hover:bg-black/30 dark:hover:bg-black/50 backdrop-blur-md border border-white/20 shadow-[0_4px_30px_rgba(0,0,0,0.1)] px-6 md:px-8 py-3'
         }`}>
-          <Link to="/" className="flex items-center gap-3">
+          <Link to="/" className="flex shrink-0 items-center gap-2 sm:gap-3">
             <img
               src="https://res.cloudinary.com/dkgwi1xvx/image/upload/v1769630007/sdfsdf_q4ziyu.png"
               alt="Sarva Solution Vision Logo"
@@ -121,22 +135,73 @@ const LandingPage = () => {
             <button onClick={() => scrollToSection('contact')} className={`font-medium transition-colors text-sm ${isScrolled ? 'text-foreground/80 hover:text-primary' : 'text-white/90 hover:text-white drop-shadow-sm'}`}>Contact</button>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3">
             <div className={isScrolled ? '' : 'brightness-200 contrast-100 drop-shadow-md'}>
               <ThemeToggle />
             </div>
-            <Link to="/franchise/login">
+
+            {/* Mobile: one button opens the links and the two logins */}
+            <button
+              type="button"
+              onClick={() => setMobileNavOpen((o) => !o)}
+              aria-label={mobileNavOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={mobileNavOpen}
+              className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors md:hidden ${
+                isScrolled ? 'text-foreground hover:bg-muted' : 'text-white hover:bg-white/15'
+              }`}
+            >
+              {mobileNavOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+
+            <Link to="/franchise/login" className="hidden md:block">
               <Button variant="outline" className={`font-semibold rounded-full shadow-lg ${isScrolled ? 'border-primary text-primary hover:bg-primary/10' : 'bg-transparent border-white text-white hover:bg-white/10'}`}>
                 Franchise Login
               </Button>
             </Link>
-            <Link to="/login">
+            <Link to="/login" className="hidden md:block">
               <Button className={`font-semibold rounded-full shadow-lg ${isScrolled ? 'bg-primary hover:bg-primary/90 text-primary-foreground' : 'bg-white hover:bg-gray-100 text-green-700 hover:text-green-800'}`}>
                 Member Login
               </Button>
             </Link>
           </div>
         </div>
+
+        {/* Mobile menu panel */}
+        <AnimatePresence>
+          {mobileNavOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18 }}
+              className="container mx-auto mt-2 max-w-7xl overflow-hidden rounded-2xl border border-border bg-background p-4 shadow-2xl md:hidden"
+            >
+              <div className="flex flex-col">
+                {NAV_LINKS.map((l) => (
+                  <button
+                    key={l.id}
+                    onClick={() => scrollToSection(l.id)}
+                    className="rounded-lg px-3 py-2.5 text-left text-sm font-medium text-foreground/80 transition-colors hover:bg-muted hover:text-primary"
+                  >
+                    {l.label}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2 border-t border-border/50 pt-3">
+                <Link to="/franchise/login" onClick={() => setMobileNavOpen(false)}>
+                  <Button variant="outline" className="w-full rounded-full border-primary font-semibold text-primary hover:bg-primary/10">
+                    Franchise Login
+                  </Button>
+                </Link>
+                <Link to="/login" onClick={() => setMobileNavOpen(false)}>
+                  <Button className="w-full rounded-full bg-primary font-semibold text-primary-foreground hover:bg-primary/90">
+                    Member Login
+                  </Button>
+                </Link>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.nav>
 
       {/* Hero Slider Section */}
