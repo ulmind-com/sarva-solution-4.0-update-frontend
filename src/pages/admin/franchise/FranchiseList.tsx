@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Store, Search, Loader2, RefreshCw, Ban, Phone, MapPin, MoreHorizontal, Pencil, Trash2, Eye, Trophy, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { Plus, Store, Search, Loader2, RefreshCw, Ban, ShieldCheck, Phone, MapPin, MoreHorizontal, Pencil, Trash2, Eye, Trophy, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -138,11 +138,22 @@ const FranchiseList = () => {
     }
   };
 
+  // Without this a blocked franchise could never be let back in from the panel.
+  const handleUnblockFranchise = async (franchise: Franchise) => {
+    try {
+      await api.patch(`/api/v1/admin/franchise/${franchise._id}/unblock`, {});
+      toast.success('Franchise unblocked successfully');
+      fetchFranchises(true);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to unblock franchise');
+    }
+  };
+
   const handleBlockFranchise = async () => {
     if (!blockModal.franchise) return;
     setIsBlocking(true);
     try {
-      await api.patch(`/api/v1/admin/franchise/block/${blockModal.franchise._id}`, { reason: blockReason });
+      await api.patch(`/api/v1/admin/franchise/${blockModal.franchise._id}/block`, { reason: blockReason });
       toast.success('Franchise blocked successfully');
       setBlockModal({ open: false, franchise: null });
       setBlockReason('');
@@ -391,7 +402,12 @@ const FranchiseList = () => {
                             <Pencil className="h-4 w-4 mr-2" />
                             Edit
                           </DropdownMenuItem>
-                          {!franchise.isBlocked && (
+                          {franchise.isBlocked ? (
+                            <DropdownMenuItem onClick={() => handleUnblockFranchise(franchise)}>
+                              <ShieldCheck className="h-4 w-4 mr-2" />
+                              Unblock
+                            </DropdownMenuItem>
+                          ) : (
                             <DropdownMenuItem onClick={() => setBlockModal({ open: true, franchise })}>
                               <Ban className="h-4 w-4 mr-2" />
                               Block
