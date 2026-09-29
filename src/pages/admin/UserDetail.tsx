@@ -129,6 +129,7 @@ const UserDetail = () => {
   const [isKYCActionLoading, setIsKYCActionLoading] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isBlockLoading, setIsBlockLoading] = useState(false);
+  const [isBlockConfirmOpen, setIsBlockConfirmOpen] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -139,14 +140,12 @@ const UserDetail = () => {
   const handleToggleBlock = async () => {
     if (!memberId || !user) return;
     const blocking = !user.isBlocked;
-    if (blocking && !window.confirm(
-      `Block ${user.fullName}?\n\nThey will be signed out and will not be able to log in until you unblock them. Nothing else about their account changes.`
-    )) return;
 
     try {
       setIsBlockLoading(true);
       await api.patch(`/api/v1/admin/users/${memberId}/${blocking ? 'block' : 'unblock'}`, {});
       toast.success(blocking ? 'Member can no longer log in' : 'Member can log in again');
+      setIsBlockConfirmOpen(false);
       await fetchUserDetail();
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Could not update login access');
@@ -363,7 +362,7 @@ const UserDetail = () => {
                 className={user.isBlocked
                   ? 'border-green-600/50 text-green-700 hover:bg-green-600/10'
                   : 'border-destructive/50 text-destructive hover:bg-destructive/10'}
-                onClick={handleToggleBlock}
+                onClick={() => (user.isBlocked ? handleToggleBlock() : setIsBlockConfirmOpen(true))}
               >
                 {user.isBlocked
                   ? <><ShieldCheck className="mr-2 h-4 w-4" /> Unblock Login</>
@@ -377,6 +376,46 @@ const UserDetail = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Block confirmation */}
+      <AlertDialog open={isBlockConfirmOpen} onOpenChange={setIsBlockConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-destructive/10">
+                <Ban className="h-5 w-5 text-destructive" />
+              </span>
+              Block {user.fullName} from logging in?
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 pt-1">
+                <p>
+                  <span className="font-mono text-foreground">{user.memberId}</span> will be signed out
+                  of the website and the app straight away, and will not be able to log in again until
+                  you unblock them — even with the correct password.
+                </p>
+                <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs">
+                  <p className="font-medium text-foreground">Nothing else changes</p>
+                  <p className="mt-1">
+                    Their tree position, BV and PV, matching, wallet and payouts all carry on exactly
+                    as before. Unblocking restores access immediately.
+                  </p>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isBlockLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isBlockLoading}
+              onClick={(e) => { e.preventDefault(); handleToggleBlock(); }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isBlockLoading ? 'Blocking…' : 'Block login'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Change Password Modal */}
       <Dialog open={isPasswordModalOpen} onOpenChange={(open) => {
