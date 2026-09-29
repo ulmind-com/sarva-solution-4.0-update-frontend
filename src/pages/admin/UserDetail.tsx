@@ -33,6 +33,8 @@ import {
   LockKeyhole,
   Eye,
   EyeOff,
+  Ban,
+  ShieldCheck,
 } from 'lucide-react';
 import api from '@/lib/api';
 import { format } from 'date-fns';
@@ -70,6 +72,8 @@ interface UserDetailData {
   phone: string;
   rank: string;
   status: 'active' | 'inactive';
+  isBlocked?: boolean;
+  blockReason?: string;
   joiningDate: string;
   sponsorId: string;
   parentId: string;
@@ -124,11 +128,32 @@ const UserDetail = () => {
   const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
   const [isKYCActionLoading, setIsKYCActionLoading] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isBlockLoading, setIsBlockLoading] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isPasswordLoading, setIsPasswordLoading] = useState(false);
+
+  // Blocking only stops this member signing in — every record stays as it is.
+  const handleToggleBlock = async () => {
+    if (!memberId || !user) return;
+    const blocking = !user.isBlocked;
+    if (blocking && !window.confirm(
+      `Block ${user.fullName}?\n\nThey will be signed out and will not be able to log in until you unblock them. Nothing else about their account changes.`
+    )) return;
+
+    try {
+      setIsBlockLoading(true);
+      await api.patch(`/api/v1/admin/users/${memberId}/${blocking ? 'block' : 'unblock'}`, {});
+      toast.success(blocking ? 'Member can no longer log in' : 'Member can log in again');
+      await fetchUserDetail();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Could not update login access');
+    } finally {
+      setIsBlockLoading(false);
+    }
+  };
 
   const handleChangePassword = async () => {
     if (!memberId) return;
@@ -302,6 +327,15 @@ const UserDetail = () => {
                 >
                   {user.status}
                 </Badge>
+                {user.isBlocked && (
+                  <Badge
+                    variant="outline"
+                    className="bg-destructive/20 text-destructive border-destructive/30 mt-1 ml-2"
+                  >
+                    <Ban className="mr-1 h-3 w-3" />
+                    Login blocked
+                  </Badge>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-3 flex-wrap">
@@ -321,6 +355,19 @@ const UserDetail = () => {
               >
                 <LockKeyhole className="mr-2 h-4 w-4" />
                 Change Password
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isBlockLoading}
+                className={user.isBlocked
+                  ? 'border-green-600/50 text-green-700 hover:bg-green-600/10'
+                  : 'border-destructive/50 text-destructive hover:bg-destructive/10'}
+                onClick={handleToggleBlock}
+              >
+                {user.isBlocked
+                  ? <><ShieldCheck className="mr-2 h-4 w-4" /> Unblock Login</>
+                  : <><Ban className="mr-2 h-4 w-4" /> Block Login</>}
               </Button>
               <Badge className="text-sm px-4 py-2">
                 <Crown className="mr-2 h-4 w-4" />
