@@ -138,7 +138,7 @@ const FastTrackBonus = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Today's Stats</p>
-                <p className="text-sm font-medium text-foreground">Closings: {data.dailyClosings} / 6</p>
+                <p className="text-sm font-medium text-foreground">Closings: {data.dailyClosings} / 9</p>
                 <p className="text-xs text-muted-foreground">
                   Last: {data.lastClosingTime ? format(new Date(data.lastClosingTime), 'hh:mm a') : 'N/A'}
                 </p>
